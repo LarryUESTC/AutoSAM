@@ -35,6 +35,8 @@ from models import sam_feat_seg_model_registry
 from dataset import generate_dataset, generate_test_loader
 from evaluate import test_synapse, test_acdc
 
+parent_dir = os.path.dirname(os.getcwd())
+os.chdir(parent_dir)
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 
@@ -73,7 +75,7 @@ parser.add_argument('--dist-backend', default='nccl', type=str,
                     help='distributed backend')
 parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
-parser.add_argument('--gpu', default=None, type=int,
+parser.add_argument('--gpu', default=0, type=int,
                     help='GPU id to use.')
 parser.add_argument('--multiprocessing-distributed', action='store_true',
                     help='Use multi-processing distributed training to launch '
@@ -81,22 +83,22 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
 
-parser.add_argument('--model_type', type=str, default="vit_l", help='path to splits file')
-parser.add_argument('--src_dir', type=str, default=None, help='path to splits file')
-parser.add_argument('--data_dir', type=str, default=None, help='path to datafolder')
+parser.add_argument('--model_type', type=str, default="vit_b", help='path to splits file')
+parser.add_argument('--src_dir', type=str, default='ACDC', help='path to splits file')
+parser.add_argument('--data_dir', type=str, default='ACDC/imgs/', help='path to datafolder')
 parser.add_argument("--img_size", type=int, default=256)
 parser.add_argument("--classes", type=int, default=8)
 parser.add_argument("--do_contrast", default=False, action='store_true')
 parser.add_argument("--slice_threshold", type=float, default=0.05)
-parser.add_argument("--num_classes", type=int, default=14)
+parser.add_argument("--num_classes", type=int, default=4)
 parser.add_argument("--fold", type=int, default=0)
 parser.add_argument("--tr_size", type=int, default=1)
-parser.add_argument("--save_dir", type=str, default=None)
+parser.add_argument("--save_dir", type=str, default='save')
 parser.add_argument("--load_saved_model", action='store_true',
                         help='whether freeze encoder of the segmenter')
 parser.add_argument("--saved_model_path", type=str, default=None)
 parser.add_argument("--load_pseudo_label", default=False, action='store_true')
-parser.add_argument("--dataset", type=str, default="synapse")
+parser.add_argument("--dataset", type=str, default="ACDC")
 
 def main():
     args = parser.parse_args()
@@ -260,7 +262,7 @@ def main_worker(gpu, ngpus_per_node, args):
         #         'state_dict': model.module.mask_decoder.state_dict(),
         #         'optimizer' : optimizer.state_dict(),
         #     }, is_best=is_best, filename=filename)
-    test(model, args)
+    mytest(model, args)
     if args.dataset == 'synapse':
         test_synapse(args)
     elif args.dataset == 'ACDC' or args.dataset == 'acdc':
@@ -346,7 +348,7 @@ def validate(val_loader, model, epoch, args, writer):
     return np.mean(loss_list)
 
 
-def test(model, args):
+def mytest(model, args):
     print('Test')
     join = os.path.join
     if not os.path.exists(join(args.save_dir, "infer")):
